@@ -31,12 +31,14 @@ npm run dev
 
 ## Наполнение базы данных (первый запуск)
 
+Скрипты читают ключи Firebase из `.env` (флаг `--env-file`, нужен Node 20+):
+
 ```bash
 # Заполнить Firestore 12 тестовыми видео
-node src/utils/seedFirestore.js
+node --env-file=.env src/utils/seedFirestore.js
 
 # Если видео не воспроизводятся — обновить URL в Firestore
-node src/utils/fixVideoUrls.js
+node --env-file=.env src/utils/fixVideoUrls.js
 ```
 
 ---
@@ -65,6 +67,7 @@ npx firebase-tools deploy --only hosting
 | `/favorites`  | Избранное (требует авторизации)                 |
 | `/author`     | Добавить видео (требует авторизации)            |
 | `/history`    | История просмотров (требует авторизации)        |
+| `/profile`    | Профиль пользователя — статистика и вкладки     |
 | `/admin`      | Панель администратора (только для admin)        |
 
 ---
