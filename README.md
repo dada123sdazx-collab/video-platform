@@ -81,6 +81,42 @@ node --env-file=.env src/utils/fixVideoUrls.js
 
 ---
 
+## Тестовые прямые ссылки на видео (.mp4)
+
+Прямая ссылка ведёт на сам видеофайл (оканчивается на `.mp4`) — в отличие от
+страницы YouTube. Подходит и для обычных видео, и для **Shorts** (нативный
+плеер ленты умеет проигрывать только прямые видео, не YouTube/Vimeo-эмбеды).
+
+Проверенные публичные ссылки (отдают `200 video/mp4`):
+
+```
+# Big Buck Bunny (анимация, ~10 сек, ~1 МБ)
+https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_1MB.mp4
+
+# Big Buck Bunny 1080p
+https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/1080/Big_Buck_Bunny_1080_10s_1MB.mp4
+
+# Jellyfish (медузы / природа, 720p)
+https://test-videos.co.uk/vids/jellyfish/mp4/h264/720/Jellyfish_720_10s_1MB.mp4
+
+# Jellyfish 360p (легче, быстрее грузится)
+https://test-videos.co.uk/vids/jellyfish/mp4/h264/360/Jellyfish_360_10s_1MB.mp4
+
+# Sintel — трейлер (кино, подлиннее)
+https://media.w3.org/2010/05/sintel/trailer.mp4
+
+# Bunny — ролик (w3.org)
+https://media.w3.org/2010/05/bunny/movie.mp4
+```
+
+Как проверить, что ссылка «прямая»: вставьте её в адресную строку браузера —
+должно открыться только видео на чёрном фоне (без сайта вокруг).
+
+Использование: «Добавить» → Название → вставить ссылку в поле «Ссылка на видео»
+→ галочка «Также добавить в Shorts» создаст вертикальный Short автоматически.
+
+---
+
 ## Маршруты
 
 | Маршрут | Описание | Доступ |

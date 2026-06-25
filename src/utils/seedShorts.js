@@ -27,9 +27,16 @@ if (!firebaseConfig.apiKey) {
 const app = initializeApp(firebaseConfig)
 const db = getFirestore(app)
 
-// Публичный тестовый mp4 (работает отовсюду). Для настоящих вертикальных
-// видео загружайте свои файлы через страницу /upload-short.
-const SAMPLE = 'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4'
+// Публичные тестовые прямые .mp4 (проверены, отдают video/mp4). Для настоящих
+// вертикальных видео загружайте свои файлы через страницу /upload-short.
+const SAMPLES = [
+  'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_1MB.mp4',
+  'https://test-videos.co.uk/vids/jellyfish/mp4/h264/720/Jellyfish_720_10s_1MB.mp4',
+  'https://media.w3.org/2010/05/sintel/trailer.mp4',
+  'https://media.w3.org/2010/05/bunny/movie.mp4',
+  'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/1080/Big_Buck_Bunny_1080_10s_1MB.mp4',
+  'https://test-videos.co.uk/vids/jellyfish/mp4/h264/360/Jellyfish_360_10s_1MB.mp4',
+]
 
 const DEMO = [
   { title: 'React за 30 секунд', category: 'Технологии', author: 'Алексей Петров', tags: ['react', 'js', 'frontend'], duration: 28 },
@@ -62,7 +69,7 @@ async function seed() {
       authorId: SEED_AUTHOR,
       authorName: s.author,
       authorAvatar: null,
-      videoUrl: SAMPLE,
+      videoUrl: SAMPLES[i % SAMPLES.length],
       videoPath: null,
       thumbnail: `https://picsum.photos/seed/short${i}/540/960`,
       thumbnailPath: null,
