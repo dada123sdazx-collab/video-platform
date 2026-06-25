@@ -94,10 +94,14 @@ export default function AuthorPanel() {
       setSuccess(true)
       setTimeout(() => navigate(`/video/${ref.id}`), 1200)
     } catch {
-      setError('Ошибка при добавлении видео')
-      toast.error('Ошибка при добавлении видео')
+      const msg = videoFile
+        ? 'Не удалось загрузить файл. Похоже, Firebase Storage не включён — включите его в консоли или используйте прямую ссылку на видео.'
+        : 'Ошибка при добавлении видео'
+      setError(msg)
+      toast.error(msg)
     } finally {
       setLoading(false)
+      setProgress(0)
     }
   }
 

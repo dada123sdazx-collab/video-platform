@@ -16,3 +16,7 @@ const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
 export const db = getFirestore(app)
 export const storage = getStorage(app)
+// Чтобы загрузка не «висела» минутами, если Storage недоступен/не включён —
+// быстро отдаём ошибку (по умолчанию SDK ретраит до 10 минут).
+storage.maxUploadRetryTime = 20000
+storage.maxOperationRetryTime = 20000
