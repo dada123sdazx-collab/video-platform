@@ -1,5 +1,4 @@
 {
-  "_comment": "Составные индексы Firestore для shorts. Импорт: firebase deploy --only firestore:indexes. Если Firebase в консоли предложит создать индекс по ссылке из ошибки — это те же самые индексы.",
   "indexes": [
     {
       "collectionGroup": "shorts",

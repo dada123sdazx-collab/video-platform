@@ -1,0 +1,47 @@
+rules_version = '2';
+
+// =====================================================================
+// ViewTube — пример правил Firebase Storage для загрузки shorts.
+//
+// Файлы short-видео хранятся по пути:  shorts/{uid}/{fileName}
+// Обложки:                              shorts/{uid}/thumbs/{fileName}
+//
+// ⚠️ DEMO: админ по email. В production используйте Custom Claims.
+// Скопируйте в storage.rules и задеплойте:
+//     firebase deploy --only storage
+// =====================================================================
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email == 'admin@viewtube.ru';
+    }
+
+    // Видео short: читать может любой; писать — только владелец папки.
+    match /shorts/{uid}/{fileName} {
+      allow read: if true;
+      allow write: if isOwner(uid)
+        && request.resource.size < 100 * 1024 * 1024          // ≤ 100 МБ
+        && request.resource.contentType.matches('video/.*');  // только видео
+      allow delete: if isOwner(uid) || isAdmin();
+    }
+
+    // Обложки.
+    match /shorts/{uid}/thumbs/{fileName} {
+      allow read: if true;
+      allow write: if isOwner(uid)
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if isOwner(uid) || isAdmin();
+    }
+
+    // Запрет на запись куда-либо ещё.
+    match /{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}
