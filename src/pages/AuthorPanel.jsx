@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { PlusSquare, CheckCircle, ArrowLeft, Play, Link2, Info } from 'lucide-react'
 import { addVideo } from '../firebase/db'
-import { useAuth } from '../context/AuthContext'
 import { useProtectedRoute } from '../hooks/useProtectedRoute'
 import { CATEGORIES } from '../components/CategoryFilter'
 

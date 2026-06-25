@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { ToastProvider } from './context/ToastContext'
+import AdminRoute from './components/AdminRoute'
 import Navbar from './components/Navbar'
 import Home from './pages/Home'
 import VideoPage from './pages/VideoPage'
@@ -13,9 +15,21 @@ import WatchHistory from './pages/WatchHistory'
 import AdminPanel from './pages/AdminPanel'
 import Profile from './pages/Profile'
 
+// Тяжёлые разделы shorts грузим лениво (code-splitting)
+const ShortsFeed = lazy(() => import('./pages/ShortsFeed'))
+const ShortUpload = lazy(() => import('./pages/ShortUpload'))
+
 function ProtectedRoute({ children }) {
   const { user } = useAuth()
   return user ? children : <Navigate to="/login" replace />
+}
+
+function PageFallback() {
+  return (
+    <div style={{ display: 'grid', placeItems: 'center', minHeight: '60vh' }}>
+      <span className="short-spinner" />
+    </div>
+  )
 }
 
 function CinematicIntro() {
@@ -46,16 +60,20 @@ function AppLayout() {
     <div style={{ minHeight:'100vh' }}>
       <CinematicIntro />
       <Navbar />
+      <Suspense fallback={<PageFallback />}>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/video/:id" element={<VideoPage />} />
         <Route path="/search" element={<SearchResults />} />
+        <Route path="/shorts" element={<ShortsFeed />} />
+        <Route path="/shorts/:id" element={<ShortsFeed />} />
+        <Route path="/upload-short" element={<ProtectedRoute><ShortUpload /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
         <Route path="/author" element={<ProtectedRoute><AuthorPanel /></ProtectedRoute>} />
         <Route path="/history" element={<ProtectedRoute><WatchHistory /></ProtectedRoute>} />
-        <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+        <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="*" element={
           <main className="wrap" style={{ paddingTop:80, textAlign:'center' }}>
@@ -68,6 +86,7 @@ function AppLayout() {
           </main>
         } />
       </Routes>
+      </Suspense>
     </div>
   )
 }
@@ -75,9 +94,11 @@ function AppLayout() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <AppLayout />
-      </AuthProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <AppLayout />
+        </AuthProvider>
+      </ToastProvider>
     </BrowserRouter>
   )
 }

@@ -19,19 +19,35 @@ export default function VideoPage() {
     let cancelled = false
     async function load() {
       setLoading(true)
-      const v = await getVideoById(id)
-      if (cancelled || !v) return
-      setVideo(v)
-      setLiked(user ? (v.likes ?? []).includes(user.uid) : false)
-      await incrementViews(id)
-      const all = await getVideos()
-      setRelated(all.filter(x => x.id !== id && x.category === v.category).slice(0, 6))
-      if (user) {
-        await addToHistory(user.uid, id)
-        const fId = await isFavorite(user.uid, id)
-        if (!cancelled) setFavId(fId)
+      try {
+        const v = await getVideoById(id)
+        if (cancelled) return
+        if (!v) { setVideo(null); return } // не найдено — выходим, finally снимет loading
+        setVideo(v)
+        setLiked(user ? (v.likes ?? []).includes(user.uid) : false)
+
+        // Просмотр засчитываем один раз за сессию (без накрутки на каждом render)
+        try {
+          const viewed = JSON.parse(sessionStorage.getItem('vt_viewed_videos') || '[]')
+          if (!viewed.includes(id)) {
+            await incrementViews(id)
+            sessionStorage.setItem('vt_viewed_videos', JSON.stringify([...viewed, id]))
+          }
+        } catch { /* sessionStorage недоступен — пропускаем учёт */ }
+
+        const all = await getVideos()
+        if (cancelled) return
+        setRelated(all.filter(x => x.id !== id && x.category === v.category).slice(0, 6))
+        if (user) {
+          await addToHistory(user.uid, id)
+          const fId = await isFavorite(user.uid, id)
+          if (!cancelled) setFavId(fId)
+        }
+      } catch {
+        if (!cancelled) setVideo(null)
+      } finally {
+        if (!cancelled) setLoading(false)
       }
-      setLoading(false)
     }
     load()
     return () => { cancelled = true }
@@ -52,10 +68,6 @@ export default function VideoPage() {
     else { const ref = await addFavorite(user.uid, id); setFavId(ref.id) }
     setFavLoading(false)
   }
-
-  const posterStyle = video?.thumbnail
-    ? { backgroundImage:`url(${video.thumbnail})`, backgroundSize:'cover', backgroundPosition:'center' }
-    : { background:'linear-gradient(135deg, oklch(0.22 0.04 50), oklch(0.18 0.06 28))' }
 
   if (loading) return (
     <main className="wrap" style={{ paddingTop:30 }}>

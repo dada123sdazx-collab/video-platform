@@ -1,15 +1,17 @@
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import {
-  Shield, Film, Users, MessageSquare, Eye, Trash2,
-  Edit3, Check, X, Plus, TrendingUp, ArrowLeft,
+  Shield, Film, Video, Users, MessageSquare, Eye, Trash2,
+  Edit3, Check, X, Plus, ArrowLeft,
 } from 'lucide-react'
 import {
   getAdminStats, getAllVideos, getAllUsers, getAllComments,
   deleteVideo, updateVideo, deleteComment, addVideo, deleteUserDoc,
 } from '../firebase/db'
 import { useAuth } from '../context/AuthContext'
+import { isAdmin, isDemoMode } from '../utils/admin'
 import { CATEGORIES } from '../components/CategoryFilter'
+import ShortsModeration from '../components/admin/ShortsModeration'
 
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL
 const NON_ALL = CATEGORIES.filter(c => c !== 'Все')
@@ -43,13 +45,13 @@ export default function AdminPanel() {
   const [newVideo, setNewVideo] = useState({ title: '', description: '', category: NON_ALL[0], videoUrl: '', thumbnail: '' })
   const [saving, setSaving] = useState(false)
 
-  // Guard
+  // Guard (дублирует AdminRoute, оставлен как защита при прямом рендере)
   useEffect(() => {
-    if (user && user.email !== ADMIN_EMAIL) navigate('/', { replace: true })
+    if (user && !isAdmin(user)) navigate('/', { replace: true })
   }, [user, navigate])
 
   useEffect(() => {
-    if (!user || user.email !== ADMIN_EMAIL) return
+    if (!user || !isAdmin(user)) return
     Promise.all([getAdminStats(), getAllVideos(), getAllUsers(), getAllComments()]).then(([s, v, u, c]) => {
       setStats(s)
       setVideos(v.sort((a, b) => (b.views ?? 0) - (a.views ?? 0)))
@@ -97,7 +99,7 @@ export default function AdminPanel() {
     setSaving(false)
   }
 
-  if (!user || user.email !== ADMIN_EMAIL) return null
+  if (!user || !isAdmin(user)) return null
 
   return (
     <main className="page-enter max-w-7xl mx-auto px-4 py-8">
@@ -113,6 +115,14 @@ export default function AdminPanel() {
           <h1 className="text-xl font-bold text-[var(--text)] tracking-tight">Панель администратора</h1>
           <p className="text-xs text-[var(--muted)]">{user.email}</p>
         </div>
+        {isDemoMode() && (
+          <span
+            className="ml-auto text-[11px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-400 border border-amber-500/30 px-2.5 py-1 rounded-lg"
+            title="Учебный режим: проверка админа по email из .env. Не для production."
+          >
+            Demo admin mode
+          </span>
+        )}
       </div>
 
       {/* Stats */}
@@ -133,6 +143,7 @@ export default function AdminPanel() {
       <div className="flex gap-1 mb-6 bg-[var(--surface)] p-1 rounded-xl w-fit border border-white/5">
         {[
           { id: 'videos',   label: 'Видео',   icon: Film },
+          { id: 'shorts',   label: 'Shorts',  icon: Video },
           { id: 'users',    label: 'Пользователи', icon: Users },
           { id: 'comments', label: 'Комментарии', icon: MessageSquare },
         ].map(({ id, label, icon: Icon }) => (
@@ -204,8 +215,8 @@ export default function AdminPanel() {
                   </thead>
                   <tbody>
                     {videos.map(v => (
-                      <>
-                        <tr key={v.id} className="border-b border-white/4 hover:bg-white/2 transition-colors">
+                      <Fragment key={v.id}>
+                        <tr className="border-b border-white/4 hover:bg-white/2 transition-colors">
                           <td className="px-4 py-3">
                             <div className="font-medium text-[var(--text)] line-clamp-1 max-w-[200px]">{v.title}</div>
                             <div className="text-xs text-[var(--muted)] mt-0.5">{v.author}</div>
@@ -261,7 +272,7 @@ export default function AdminPanel() {
                             </td>
                           </tr>
                         )}
-                      </>
+                      </Fragment>
                     ))}
                   </tbody>
                 </table>
@@ -270,6 +281,9 @@ export default function AdminPanel() {
           )}
         </div>
       )}
+
+      {/* ── Shorts moderation tab ───────────────────────────────── */}
+      {tab === 'shorts' && <ShortsModeration />}
 
       {/* ── Users tab ───────────────────────────────────────────── */}
       {tab === 'users' && (

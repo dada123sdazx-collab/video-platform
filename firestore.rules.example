@@ -1,0 +1,116 @@
+rules_version = '2';
+
+// =====================================================================
+// ViewTube — пример правил Cloud Firestore.
+//
+// ⚠️ УЧЕБНЫЙ ПРОЕКТ / DEMO. Админ определяется по email (demo-режим).
+// В PRODUCTION замените isAdmin() на проверку Custom Claims:
+//     request.auth.token.admin == true
+// и раздавайте claim через Admin SDK. Не полагайтесь на email из .env.
+//
+// Скопируйте в firestore.rules и задеплойте:
+//     firebase deploy --only firestore:rules
+// =====================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+    // DEMO: админ по email. PROD: return request.auth.token.admin == true;
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email == 'admin@viewtube.ru';
+    }
+    // Изменяются только перечисленные поля (для счётчиков)
+    function onlyChanges(fields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
+    }
+
+    // ── Обычные видео ───────────────────────────────────────────────
+    match /videos/{id} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update: if isAdmin()
+        // лайки/просмотры могут менять авторизованные пользователи
+        || (isSignedIn() && onlyChanges(['likes', 'views']));
+      allow delete: if isAdmin();
+    }
+
+    // ── Профили пользователей ───────────────────────────────────────
+    match /users/{uid} {
+      allow read: if true;
+      allow create, update: if isOwner(uid);
+      allow delete: if isAdmin();
+    }
+
+    // ── Избранное / история / комментарии обычных видео ─────────────
+    match /favorites/{id} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(request.resource.data.userId);
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+    match /watchHistory/{id} {
+      allow read: if isSignedIn();
+      allow create, update: if isOwner(request.resource.data.userId);
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+    match /comments/{id} {
+      allow read: if true;
+      allow create: if isOwner(request.resource.data.userId);
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    // ── SHORTS ──────────────────────────────────────────────────────
+    match /shorts/{id} {
+      // Публично читаемы только опубликованные публичные shorts.
+      allow read: if (resource.data.status == 'published' && resource.data.visibility == 'public')
+        || isOwner(resource.data.authorId)
+        || isAdmin();
+      // authorId должен совпадать с uid создающего.
+      allow create: if isOwner(request.resource.data.authorId);
+      // Автор правит свой short; админ модерирует; счётчики — любой вошедший.
+      allow update: if isOwner(resource.data.authorId)
+        || isAdmin()
+        || (isSignedIn() && onlyChanges(['likesCount', 'savesCount', 'commentsCount', 'viewsCount', 'sharesCount', 'moderation']));
+      allow delete: if isOwner(resource.data.authorId) || isAdmin();
+    }
+
+    // Лайки/сохранения — id вида {uid}_{shortId}, только свои.
+    match /shortLikes/{id} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(request.resource.data.userId);
+      allow delete: if isOwner(resource.data.userId);
+    }
+    match /shortSaves/{id} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(request.resource.data.userId);
+      allow delete: if isOwner(resource.data.userId);
+    }
+
+    // Комментарии к shorts.
+    match /shortComments/{id} {
+      allow read: if true;
+      allow create: if isOwner(request.resource.data.userId);
+      allow update: if isOwner(resource.data.userId);
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    // Просмотры: пишем (в т.ч. гость), читаем — только админ.
+    match /shortViews/{id} {
+      allow create: if true;
+      allow read: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // Жалобы: создаёт только вошедший от своего uid; читает/правит админ.
+    match /shortReports/{id} {
+      allow create: if isOwner(request.resource.data.userId);
+      allow read, update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+  }
+}

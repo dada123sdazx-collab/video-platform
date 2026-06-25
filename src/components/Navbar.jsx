@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-
-const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL
+import { isAdmin } from '../utils/admin'
 
 const SVG = {
   play: <svg viewBox="0 0 24 24"><path d="M9 6.3v11.4a1 1 0 0 0 1.5.86l9.4-5.7a1 1 0 0 0 0-1.72l-9.4-5.7A1 1 0 0 0 9 6.3Z" fill="currentColor"/></svg>,
@@ -24,7 +23,7 @@ export default function Navbar() {
   const [stuck, setStuck] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  const isAdmin = user?.email === ADMIN_EMAIL
+  const admin = isAdmin(user)
 
   useEffect(() => {
     const onScroll = () => setStuck(window.scrollY > 10)
@@ -55,10 +54,11 @@ export default function Navbar() {
 
             <nav className="nav">
               <Link to="/" className={`nav__link${isActive('/') ? ' is-active' : ''}`}>Главная</Link>
+              <Link to="/shorts" className={`nav__link${isActive('/shorts') ? ' is-active' : ''}`}>Shorts</Link>
               {user && <Link to="/favorites" className={`nav__link${isActive('/favorites') ? ' is-active' : ''}`}>Избранное</Link>}
               {user && <Link to="/history" className={`nav__link${isActive('/history') ? ' is-active' : ''}`}>История</Link>}
               {user && <Link to="/author" className={`nav__link${isActive('/author') ? ' is-active' : ''}`}>Добавить</Link>}
-              {isAdmin && <Link to="/admin" className={`nav__link${isActive('/admin') ? ' is-active' : ''}`} style={{color:'var(--accent)'}}>Админка</Link>}
+              {admin && <Link to="/admin" className={`nav__link${isActive('/admin') ? ' is-active' : ''}`} style={{color:'var(--accent)'}}>Админка</Link>}
             </nav>
 
             <div className="header__right">
@@ -95,11 +95,13 @@ export default function Navbar() {
           </form>
           {[
             { to:'/', label:'Главная' },
+            { to:'/shorts', label:'Shorts' },
             ...(user ? [
               { to:'/favorites', label:'Избранное' },
               { to:'/history', label:'История просмотров' },
               { to:'/author', label:'Добавить видео' },
-              ...(isAdmin ? [{ to:'/admin', label:'Панель администратора', accent:true }] : []),
+              { to:'/upload-short', label:'Загрузить short' },
+              ...(admin ? [{ to:'/admin', label:'Панель администратора', accent:true }] : []),
             ] : [{ to:'/login', label:'Войти', accent:true }]),
           ].map(({ to, label, accent }) => (
             <Link key={to} to={to} onClick={() => setMobileOpen(false)}

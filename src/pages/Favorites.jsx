@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Heart } from 'lucide-react'
 import { getFavorites, getVideoById } from '../firebase/db'
-import { useAuth } from '../context/AuthContext'
 import { useProtectedRoute } from '../hooks/useProtectedRoute'
 import VideoCard from '../components/VideoCard'
 

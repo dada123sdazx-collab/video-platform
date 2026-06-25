@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getVideos } from '../firebase/db'
+import { getPopularShorts } from '../firebase/shorts'
 import VideoCard from '../components/VideoCard'
 import CategoryFilter from '../components/CategoryFilter'
+import ShortPreviewCard from '../components/shorts/ShortPreviewCard'
 
 function CardSkeleton() {
   return (
@@ -23,13 +25,14 @@ function CardSkeleton() {
 
 export default function Home() {
   const [videos, setVideos] = useState([])
+  const [shorts, setShorts] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('Все')
-  const revealRef = useRef([])
 
   useEffect(() => {
     getVideos().then(v => { setVideos(v); setLoading(false) })
+    getPopularShorts(10).then(setShorts).catch(() => setShorts([]))
   }, [])
 
   useEffect(() => {
@@ -123,6 +126,22 @@ export default function Home() {
           <CategoryFilter active={category} onChange={setCategory} />
         </div>
       </section>
+
+      {/* POPULAR SHORTS */}
+      {shorts.length > 0 && (
+        <section className="wrap section" style={{ paddingBottom: 0 }}>
+          <div className="section__head">
+            <div>
+              <h2 className="section__title">Популярные <span className="accent">Shorts</span></h2>
+              <p className="section__sub">Короткие вертикальные видео</p>
+            </div>
+            <Link to="/shorts" className="section__more">Смотреть ленту →</Link>
+          </div>
+          <div className="scroller shorts-rail">
+            {shorts.map(s => <ShortPreviewCard key={s.id} short={s} />)}
+          </div>
+        </section>
+      )}
 
       {/* CATALOG */}
       <section className="wrap section" id="catalog">

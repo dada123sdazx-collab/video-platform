@@ -4,6 +4,7 @@ import {
   addDoc,
   getDoc,
   getDocs,
+  setDoc,
   updateDoc,
   deleteDoc,
   query,
@@ -142,9 +143,9 @@ export async function getHistory(uid) {
 // ── Users ────────────────────────────────────────────────────────────────────
 
 export async function saveUser(uid, name, email) {
-  await updateDoc(doc(db, 'users', uid), { name, email }).catch(() =>
-    addDoc(collection(db, 'users'), { uid, name, email })
-  )
+  // setDoc + merge: документ пользователя всегда ключуется по uid,
+  // дубликаты не создаются (раньше fallback на addDoc плодил копии).
+  await setDoc(doc(db, 'users', uid), { uid, name, email }, { merge: true })
 }
 
 // ── Admin ────────────────────────────────────────────────────────────────────

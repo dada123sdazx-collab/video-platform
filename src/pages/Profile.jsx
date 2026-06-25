@@ -1,20 +1,38 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
 import { useProtectedRoute } from '../hooks/useProtectedRoute'
 import { getFavorites, getHistory, getVideoById } from '../firebase/db'
+import { getUserShorts, deleteShort } from '../firebase/shorts'
+import { getSavedShorts } from '../firebase/shortInteractions'
 import VideoCard from '../components/VideoCard'
+import ShortPreviewCard from '../components/shorts/ShortPreviewCard'
 
-const TABS = ['Избранное', 'История', 'Настройки']
+const TABS = ['Избранное', 'История', 'Мои Shorts', 'Сохранённые', 'Настройки']
+
+function ShortsGridSkeleton() {
+  return (
+    <div className="shorts-grid">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="sk" style={{ aspectRatio: '9/16', borderRadius: 'var(--r-card)' }} />
+      ))}
+    </div>
+  )
+}
 
 export default function Profile() {
   const user = useProtectedRoute()
   const { logout } = useAuth()
+  const toast = useToast()
   const navigate = useNavigate()
   const [tab, setTab] = useState('Избранное')
   const [favVideos, setFavVideos] = useState([])
   const [histVideos, setHistVideos] = useState([])
+  const [myShorts, setMyShorts] = useState([])
+  const [savedShorts, setSavedShorts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [shortsLoading, setShortsLoading] = useState(true)
 
   useEffect(() => {
     if (!user) return
@@ -30,6 +48,24 @@ export default function Profile() {
     }
     load()
   }, [user])
+
+  useEffect(() => {
+    if (!user) return
+    Promise.all([getUserShorts(user.uid), getSavedShorts(user.uid)])
+      .then(([mine, saved]) => { setMyShorts(mine); setSavedShorts(saved) })
+      .finally(() => setShortsLoading(false))
+  }, [user])
+
+  async function handleDeleteShort(id, title) {
+    if (!confirm(`Удалить short «${title}»?`)) return
+    try {
+      await deleteShort(id)
+      setMyShorts(list => list.filter(s => s.id !== id))
+      toast.success('Short удалён')
+    } catch {
+      toast.error('Не удалось удалить')
+    }
+  }
 
   if (!user) return null
 
@@ -83,10 +119,10 @@ export default function Profile() {
       </div>
 
       {/* ── Tabs ── */}
-      <div style={{ display:'flex', gap:4, marginTop:30, borderBottom:'1px solid var(--line)' }}>
+      <div className="scroller" style={{ display:'flex', gap:4, marginTop:30, borderBottom:'1px solid var(--line)' }}>
         {TABS.map(t => (
           <button key={t} onClick={() => setTab(t)}
-            style={{ padding:'13px 18px', color: tab===t ? 'var(--text)' : 'var(--muted)', fontWeight:600, fontSize:14.5, borderBottom: tab===t ? '2px solid var(--accent)' : '2px solid transparent', marginBottom:-1, transition:'.2s', background:'none', border:'none', borderBottom: tab===t ? '2px solid var(--accent)' : '2px solid transparent', cursor:'pointer' }}>
+            style={{ flex:'none', padding:'13px 18px', color: tab===t ? 'var(--text)' : 'var(--muted)', fontWeight:600, fontSize:14.5, marginBottom:-1, transition:'.2s', background:'none', border:'none', borderBottom: tab===t ? '2px solid var(--accent)' : '2px solid transparent', cursor:'pointer', whiteSpace:'nowrap' }}>
             {t}
           </button>
         ))}
@@ -121,6 +157,37 @@ export default function Profile() {
               </div>
             </div>
           </div>
+        ) : tab === 'Мои Shorts' ? (
+          shortsLoading ? <ShortsGridSkeleton /> : myShorts.length === 0 ? (
+            <div className="empty">
+              <div className="empty__icon" style={{fontSize:28}}>🎬</div>
+              <h3>У вас пока нет shorts</h3>
+              <p>Загрузите первое короткое видео — оно появится здесь</p>
+              <Link to="/upload-short" className="btn btn--primary" style={{marginTop:16}}>Загрузить short</Link>
+            </div>
+          ) : (
+            <div className="shorts-grid">
+              {myShorts.map(s => (
+                <div key={s.id} className="shorts-grid__item">
+                  <ShortPreviewCard short={s} showStatus />
+                  <button className="btn btn--ghost btn--sm shorts-grid__del" onClick={() => handleDeleteShort(s.id, s.title)}>Удалить</button>
+                </div>
+              ))}
+            </div>
+          )
+        ) : tab === 'Сохранённые' ? (
+          shortsLoading ? <ShortsGridSkeleton /> : savedShorts.length === 0 ? (
+            <div className="empty">
+              <div className="empty__icon" style={{fontSize:28}}>🔖</div>
+              <h3>Нет сохранённых shorts</h3>
+              <p>Сохраняйте короткие видео — они появятся здесь</p>
+              <Link to="/shorts" className="btn btn--secondary" style={{marginTop:16}}>Открыть ленту</Link>
+            </div>
+          ) : (
+            <div className="shorts-grid">
+              {savedShorts.map(s => <ShortPreviewCard key={s.id} short={s} />)}
+            </div>
+          )
         ) : loading ? (
           <div className="grid">
             {Array.from({length:4}).map((_,i) => (
