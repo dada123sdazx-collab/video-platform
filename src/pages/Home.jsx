@@ -142,7 +142,7 @@ export default function Home() {
 
       {/* POPULAR SHORTS */}
       {shorts.length > 0 && (
-        <section className="wrap section" style={{ paddingBottom: 0 }}>
+        <section className="wrap section section--shorts" style={{ paddingBottom: 0 }}>
           <div className="section__head">
             <div>
               <h2 className="section__title">Популярные <span className="accent">Shorts</span></h2>

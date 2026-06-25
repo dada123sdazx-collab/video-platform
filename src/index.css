@@ -449,7 +449,22 @@ h1,h2,h3,h4 { font-family: 'Space Grotesk', sans-serif; font-weight: 600; line-h
 .sk--title { height: 20px; }
 
 /* ── HERO ────────────────────────────────────────────────── */
-.hero { position: relative; display: flex; align-items: center; min-height: min(88vh, 800px); padding-top: clamp(56px,8vw,108px); padding-bottom: clamp(36px,5vw,72px); }
+.hero { position: relative; display: flex; align-items: center; min-height: min(88vh, 800px); padding-top: clamp(56px,8vw,108px); padding-bottom: clamp(36px,5vw,72px); isolation: isolate; }
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -12%;
+  bottom: -10%;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(760px 580px at 77% 20%, oklch(0.635 0.215 293 / 0.20), transparent 68%),
+    radial-gradient(700px 520px at 14% 54%, oklch(0.74 0.150 210 / 0.12), transparent 70%),
+    linear-gradient(90deg, transparent 0%, oklch(0.132 0.024 285 / 0.55) 16%, oklch(0.132 0.024 285 / 0.55) 84%, transparent 100%);
+}
 .hero > .particles { z-index: 0; }
 .hero__grid { position: relative; z-index: 1; width: 100%; display: grid; grid-template-columns: 1.05fr 1fr; gap: clamp(28px,4vw,64px); align-items: center; }
 .hero__stage { position: relative; display: grid; place-items: center; min-height: clamp(300px, 40vw, 480px); }
@@ -478,7 +493,17 @@ h1,h2,h3,h4 { font-family: 'Space Grotesk', sans-serif; font-weight: 600; line-h
 }
 
 /* cinematic depth background blobs for the hero */
-.hero__bg { position: absolute; inset: -10% -5%; z-index: 0; pointer-events: none; overflow: hidden; }
+.hero__bg {
+  position: absolute;
+  top: -10%;
+  bottom: -12%;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
 .hero__bg i { position: absolute; border-radius: 50%; filter: blur(70px); opacity: .55; }
 .hero__bg i:nth-child(1) { width: 46vw; height: 46vw; left: 48%; top: -8%; background: radial-gradient(circle, var(--accent), transparent 68%); animation: blobDrift 22s var(--ease) infinite alternate; }
 .hero__bg i:nth-child(2) { width: 38vw; height: 38vw; left: 2%; top: 30%; background: radial-gradient(circle, var(--glow), transparent 68%); animation: blobDrift 26s var(--ease) infinite alternate-reverse; }
@@ -1033,8 +1058,66 @@ h1,h2,h3,h4 { font-family: 'Space Grotesk', sans-serif; font-weight: 600; line-h
 /* =====================================================================
    SHORT PREVIEW CARDS (главная / профиль)
    ===================================================================== */
-.shorts-rail { padding-bottom: 6px; }
-.shorts-rail .spreview { width: 168px; flex: none; }
+.section--shorts {
+  position: relative;
+  isolation: isolate;
+}
+.section--shorts::before,
+.section--shorts::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 0;
+}
+.section--shorts::before {
+  top: -34px;
+  bottom: -42px;
+  background:
+    radial-gradient(520px 220px at 22% 20%, oklch(0.80 0.125 200 / 0.13), transparent 66%),
+    radial-gradient(520px 260px at 72% 36%, oklch(0.635 0.215 293 / 0.16), transparent 70%),
+    radial-gradient(420px 240px at 48% 100%, oklch(0.62 0.185 258 / 0.11), transparent 68%);
+  opacity: .8;
+  animation: shortsAurora 10s var(--ease) infinite alternate;
+}
+.section--shorts::after {
+  top: 76px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan), var(--accent), transparent);
+  opacity: .34;
+  filter: blur(.2px);
+  animation: shortsLineScan 4.8s var(--ease) infinite;
+}
+.section--shorts .section__head,
+.section--shorts .shorts-rail {
+  position: relative;
+  z-index: 1;
+}
+.section--shorts .section__title .accent {
+  text-shadow: 0 0 20px oklch(0.635 0.215 293 / 0.35);
+  animation: shortsTitleGlow 3.6s var(--ease) infinite alternate;
+}
+.shorts-rail { padding: 4px 0 14px; scroll-padding-inline: 4px; }
+.shorts-rail .spreview {
+  --i: 0;
+  width: 168px;
+  flex: none;
+  animation: shortsCardFloat 5.8s ease-in-out infinite;
+  animation-delay: calc(var(--i) * -520ms);
+  will-change: transform;
+}
+.shorts-rail .spreview:nth-child(1) { --i: 0; }
+.shorts-rail .spreview:nth-child(2) { --i: 1; }
+.shorts-rail .spreview:nth-child(3) { --i: 2; }
+.shorts-rail .spreview:nth-child(4) { --i: 3; }
+.shorts-rail .spreview:nth-child(5) { --i: 4; }
+.shorts-rail .spreview:nth-child(6) { --i: 5; }
+.shorts-rail .spreview:nth-child(7) { --i: 6; }
+.shorts-rail .spreview:nth-child(8) { --i: 7; }
+.shorts-rail .spreview:nth-child(9) { --i: 8; }
+.shorts-rail .spreview:nth-child(10) { --i: 9; }
 .shorts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; }
 .shorts-grid__item { display: flex; flex-direction: column; gap: 8px; }
 .shorts-grid__del { align-self: flex-start; }
@@ -1044,11 +1127,59 @@ h1,h2,h3,h4 { font-family: 'Space Grotesk', sans-serif; font-weight: 600; line-h
   background-size: cover; background-position: center; overflow: hidden;
   border: 1px solid var(--line); transition: transform .3s var(--ease), border-color .3s;
 }
-.spreview:hover .spreview__poster { transform: translateY(-4px); border-color: var(--line-2); box-shadow: 0 20px 40px -22px rgba(0,0,0,.9); }
+.spreview__poster::before,
+.spreview__poster::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+}
+.spreview__poster::before {
+  background: linear-gradient(116deg, transparent 0 36%, rgba(255,255,255,.18) 48%, transparent 60% 100%);
+  opacity: 0;
+  transform: translateX(-115%);
+}
+.spreview__poster::after {
+  padding: 1px;
+  background: conic-gradient(from 180deg, transparent, var(--cyan), var(--accent), transparent 72%);
+  opacity: 0;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+.spreview:hover .spreview__poster { transform: translateY(-6px) scale(1.018); border-color: var(--line-2); box-shadow: 0 24px 50px -22px rgba(0,0,0,.9), 0 0 38px -20px var(--accent); }
+.shorts-rail .spreview__poster {
+  box-shadow: 0 18px 42px -34px var(--accent);
+}
+.shorts-rail .spreview__poster::before {
+  opacity: .8;
+  animation: shortsPosterShine 4.8s var(--ease) infinite;
+  animation-delay: calc(var(--i) * -430ms);
+}
+.shorts-rail .spreview__poster::after {
+  opacity: .42;
+  animation: shortsRimPulse 3.8s var(--ease) infinite alternate;
+  animation-delay: calc(var(--i) * -320ms);
+}
 .spreview__scrim { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(0,0,0,.6), transparent 45%); }
-.spreview__play { position: absolute; inset: 0; margin: auto; width: 46px; height: 46px; border-radius: 99px; display: grid; place-items: center; background: rgba(12,12,14,.4); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,.3); color: #fff; opacity: 0; transition: .25s var(--ease); }
+.spreview__play { position: absolute; inset: 0; margin: auto; width: 46px; height: 46px; border-radius: 99px; display: grid; place-items: center; background: rgba(12,12,14,.4); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,.3); color: #fff; opacity: 0; transition: .25s var(--ease); z-index: 2; }
 .spreview__play svg { width: 18px; height: 18px; margin-left: 2px; }
 .spreview:hover .spreview__play { opacity: 1; }
+.shorts-rail .spreview__play {
+  width: 40px;
+  height: 40px;
+  opacity: .58;
+  background: oklch(0.176 0.028 284 / .58);
+  box-shadow: 0 0 0 0 oklch(0.80 0.125 200 / .34), 0 0 28px -10px var(--cyan);
+  animation: shortsPlayPulse 2.6s var(--ease) infinite;
+  animation-delay: calc(var(--i) * -220ms);
+}
+.shorts-rail .spreview:hover .spreview__play {
+  opacity: 1;
+  transform: scale(1.08);
+}
 .spreview__views { position: absolute; left: 9px; bottom: 9px; display: inline-flex; align-items: center; gap: 5px; color: #fff; font-size: 12px; font-weight: 600; text-shadow: 0 1px 4px rgba(0,0,0,.7); }
 .spreview__views svg { width: 14px; height: 14px; }
 .spreview__status { position: absolute; right: 9px; top: 9px; padding: 3px 8px; border-radius: 7px; font-size: 11px; font-weight: 700; background: rgba(8,8,10,.7); color: var(--accent); border: 1px solid var(--accent-line); }
@@ -1056,6 +1187,47 @@ h1,h2,h3,h4 { font-family: 'Space Grotesk', sans-serif; font-weight: 600; line-h
 .spreview__meta { display: flex; align-items: center; gap: 7px; color: var(--faint); font-size: 12px; }
 .spreview__av { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-size: 10px; font-weight: 700; flex: none; }
 .spreview__author { max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@keyframes shortsAurora {
+  from { opacity: .58; transform: translateX(-50%) translate3d(-2%, -3%, 0) scale(1); }
+  to { opacity: .9; transform: translateX(-50%) translate3d(2.5%, 2%, 0) scale(1.04); }
+}
+@keyframes shortsLineScan {
+  0%, 100% { opacity: .18; filter: blur(.2px); }
+  45%, 58% { opacity: .52; filter: blur(.4px); }
+}
+@keyframes shortsTitleGlow {
+  from { text-shadow: 0 0 12px oklch(0.635 0.215 293 / 0.18); }
+  to { text-shadow: 0 0 26px oklch(0.635 0.215 293 / 0.48), 0 0 42px oklch(0.80 0.125 200 / 0.18); }
+}
+@keyframes shortsCardFloat {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -8px, 0); }
+}
+@keyframes shortsPosterShine {
+  0%, 58% { transform: translateX(-115%); opacity: 0; }
+  70% { opacity: .72; }
+  100% { transform: translateX(115%); opacity: 0; }
+}
+@keyframes shortsRimPulse {
+  from { opacity: .18; filter: saturate(90%); }
+  to { opacity: .58; filter: saturate(130%); }
+}
+@keyframes shortsPlayPulse {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.80 0.125 200 / .28), 0 0 28px -12px var(--cyan); transform: scale(.98); }
+  50% { box-shadow: 0 0 0 12px oklch(0.80 0.125 200 / 0), 0 0 34px -8px var(--accent); transform: scale(1.04); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .section--shorts::before,
+  .section--shorts::after,
+  .section--shorts .section__title .accent,
+  .shorts-rail .spreview,
+  .shorts-rail .spreview__poster::before,
+  .shorts-rail .spreview__poster::after,
+  .shorts-rail .spreview__play {
+    animation: none;
+  }
+}
 
 /* =====================================================================
    PREMIUM PRIMITIVES (redesign pass) — purple/cyan cinematic system
