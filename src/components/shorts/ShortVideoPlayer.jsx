@@ -29,7 +29,7 @@ export default function ShortVideoPlayer({
 
   const posterStyle = short.thumbnail
     ? { backgroundImage: `url(${short.thumbnail})` }
-    : { background: 'linear-gradient(160deg, oklch(0.24 0.05 280), oklch(0.16 0.05 28))' }
+    : { background: 'linear-gradient(160deg, oklch(0.26 0.08 293), oklch(0.16 0.06 240))' }
 
   function handleTap() {
     if (tapTimer.current) {

@@ -106,28 +106,32 @@ export default function AuthorPanel() {
   }
 
   if (success) return (
-    <main className="page-enter max-w-7xl mx-auto px-4 py-32 text-center">
-      <CheckCircle className="mx-auto text-emerald-500 mb-4" size={48} />
-      <p className="text-lg font-semibold text-[var(--text)]">Видео добавлено</p>
-      <p className="text-sm text-[var(--muted)] mt-1">Переходим на страницу видео...</p>
+    <main className="wrap" style={{ maxWidth: 660 }}>
+      <div className="upload-success">
+        <div className="upload-check"><CheckCircle size={44} /></div>
+        <h3 style={{ fontSize: 24 }}>Видео опубликовано</h3>
+        <p style={{ color: 'var(--muted)' }}>Переходим на страницу видео…</p>
+      </div>
     </main>
   )
 
   const ytDetected = isYouTube(form.videoUrl)
 
   return (
-    <main className="page-enter max-w-2xl mx-auto px-4 py-8">
-      <div className="flex items-center gap-3 mb-6">
-        <Link to="/" className="p-2 rounded-lg text-[var(--muted)] hover:text-violet-400 hover:bg-violet-500/5 transition-colors">
+    <main className="wrap" style={{ maxWidth: 660, paddingBottom: 60 }}>
+      <header className="phead reveal" style={{ gap: 16 }}>
+        <Link to="/" className="icon-btn" aria-label="Назад на главную" style={{ flex: 'none' }}>
           <ArrowLeft size={18} />
         </Link>
-        <div className="w-9 h-9 rounded-xl bg-violet-600/15 flex items-center justify-center text-violet-400">
-          <PlusSquare size={18} />
+        <span className="phead__icon"><PlusSquare size={26} /></span>
+        <div className="phead__t">
+          <span className="eyebrow">Студия</span>
+          <h1 style={{ fontSize: 'clamp(24px,3vw,32px)' }}>Добавить <span className="grad-text">видео</span></h1>
+          <p>Опубликуйте видео в каталоге ViewTube</p>
         </div>
-        <h1 className="text-xl font-bold text-[var(--text)] tracking-tight">Добавить видео</h1>
-      </div>
+      </header>
 
-      <form onSubmit={handleSubmit} className="space-y-5 bg-[var(--surface)] rounded-2xl p-6 border border-white/5 shadow-xl">
+      <form onSubmit={handleSubmit} className="upload-form">
         {error && (
           <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">{error}</div>
         )}

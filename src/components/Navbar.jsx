@@ -88,7 +88,7 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div style={{ position:'fixed', inset:0, zIndex:50, background:'var(--bg)', padding:'80px 24px 24px', display:'flex', flexDirection:'column', gap:8 }}>
+        <div className="mobile-menu">
           <form onSubmit={e => { handleSearch(e); setMobileOpen(false) }} className="search" style={{marginBottom:16}}>
             <svg className="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
             <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Поиск видео…" />

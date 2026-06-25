@@ -10,7 +10,7 @@ import { formatTimeAgo, initialOf } from '../utils/formatters'
 const AV_COLORS = [
   'linear-gradient(150deg,oklch(0.45 0.13 280),oklch(0.4 0.15 330))',
   'linear-gradient(150deg,oklch(0.5 0.15 180),oklch(0.45 0.18 220))',
-  'linear-gradient(150deg,oklch(0.55 0.18 52),oklch(0.5 0.2 28))',
+  'linear-gradient(150deg,oklch(0.72 0.13 200),oklch(0.6 0.17 250))',
 ]
 function avColor(s) {
   let h = 0

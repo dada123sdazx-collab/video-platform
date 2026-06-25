@@ -5,7 +5,7 @@ import { formatCount, initialOf } from '../../utils/formatters'
 export default function ShortPreviewCard({ short, showStatus = false }) {
   const posterStyle = short.thumbnail
     ? { backgroundImage: `url(${short.thumbnail})` }
-    : { background: 'linear-gradient(160deg, oklch(0.26 0.06 280), oklch(0.16 0.05 28))' }
+    : { background: 'linear-gradient(160deg, oklch(0.28 0.09 293), oklch(0.18 0.07 240))' }
 
   const statusLabel = {
     published: 'Опубликован',

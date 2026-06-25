@@ -140,6 +140,12 @@ export async function getHistory(uid) {
   })
 }
 
+export async function clearHistory(uid) {
+  const q = query(collection(db, 'watchHistory'), where('userId', '==', uid))
+  const snap = await getDocs(q)
+  await Promise.all(snap.docs.map(d => deleteDoc(doc(db, 'watchHistory', d.id))))
+}
+
 // ── Users ────────────────────────────────────────────────────────────────────
 
 export async function saveUser(uid, name, email) {

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 const AVATAR_COLORS = [
   'linear-gradient(150deg,oklch(0.45 0.13 280),oklch(0.4 0.15 330))',
   'linear-gradient(150deg,oklch(0.5 0.15 180),oklch(0.45 0.18 220))',
-  'linear-gradient(150deg,oklch(0.55 0.18 52),oklch(0.5 0.2 28))',
+  'linear-gradient(150deg,oklch(0.72 0.13 200),oklch(0.6 0.17 250))',
   'linear-gradient(150deg,oklch(0.48 0.14 140),oklch(0.43 0.17 160))',
 ]
 
@@ -13,7 +13,7 @@ function getColor(str) {
   return AVATAR_COLORS[h % AVATAR_COLORS.length]
 }
 
-export default function VideoCard({ video }) {
+export default function VideoCard({ video, index = 0 }) {
   const { id, title, description, author, category, thumbnail, views, likes, date } = video
 
   const dateStr = date?.toDate
@@ -22,10 +22,10 @@ export default function VideoCard({ video }) {
 
   const posterStyle = thumbnail
     ? { backgroundImage: `url(${thumbnail})`, backgroundSize:'cover', backgroundPosition:'center' }
-    : { background: `linear-gradient(135deg, oklch(0.22 0.04 ${50 + (id?.charCodeAt(0) ?? 0) % 80}) 0%, oklch(0.18 0.06 ${28 + (id?.charCodeAt(1) ?? 0) % 60}) 100%)` }
+    : { background: `linear-gradient(135deg, oklch(0.26 0.09 ${270 + (id?.charCodeAt(0) ?? 0) % 50}) 0%, oklch(0.18 0.07 ${230 + (id?.charCodeAt(1) ?? 0) % 40}) 100%)` }
 
   return (
-    <Link to={`/video/${id}`} className="card">
+    <Link to={`/video/${id}`} className="card reveal" style={{ '--d': `${Math.min(index, 11) * 55}ms` }}>
       <div className="poster">
         <div className="poster__art" style={posterStyle} />
         <div className="poster__scrim" />

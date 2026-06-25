@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Heart } from 'lucide-react'
 import { getFavorites, getVideoById } from '../firebase/db'
 import { useProtectedRoute } from '../hooks/useProtectedRoute'
 import VideoCard from '../components/VideoCard'
+import { CardSkeletonGrid } from '../components/CardSkeleton'
+import EmptyState3D from '../components/visuals/EmptyState3D'
+
+const HeartIcon = (
+  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+)
 
 export default function Favorites() {
   const user = useProtectedRoute()
@@ -14,8 +18,7 @@ export default function Favorites() {
     if (!user) return
     async function load() {
       const favs = await getFavorites(user.uid)
-      const videoPromises = favs.map(f => getVideoById(f.videoId))
-      const results = await Promise.all(videoPromises)
+      const results = await Promise.all(favs.map(f => getVideoById(f.videoId)))
       setVideos(results.filter(Boolean))
       setLoading(false)
     }
@@ -23,34 +26,33 @@ export default function Favorites() {
   }, [user])
 
   return (
-    <main className="max-w-7xl mx-auto px-4 py-6">
-      <div className="flex items-center gap-2 mb-6">
-        <Heart className="text-violet-600 dark:text-violet-400" size={22} />
-        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Избранное</h1>
-      </div>
+    <main className="wrap" style={{ paddingBottom: 64 }}>
+      <header className="phead reveal">
+        <span className="phead__icon">{HeartIcon}</span>
+        <div className="phead__t">
+          <span className="eyebrow">Ваша коллекция</span>
+          <h1>Избранное</h1>
+          <p>
+            {loading ? 'Загружаем сохранённое…'
+              : videos.length === 0 ? 'Здесь появятся видео, которые вы сохраните'
+              : <>В коллекции <span className="phead__count tnum">{videos.length}</span> видео</>}
+          </p>
+        </div>
+      </header>
 
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="flex flex-col bg-white dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 animate-pulse">
-              <div className="aspect-video bg-gray-200 dark:bg-gray-700" />
-              <div className="p-3 space-y-2">
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
-                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
-              </div>
-            </div>
-          ))}
-        </div>
+        <CardSkeletonGrid count={8} />
       ) : videos.length === 0 ? (
-        <div className="text-center py-24 text-gray-400 dark:text-gray-500">
-          <p className="text-5xl mb-4">💛</p>
-          <p className="text-lg">Избранное пусто</p>
-          <p className="text-sm mt-1 mb-4">Добавляйте видео в избранное прямо на странице просмотра</p>
-          <Link to="/" className="text-violet-600 dark:text-violet-400 hover:underline text-sm">Перейти в каталог</Link>
-        </div>
+        <EmptyState3D
+          icon={HeartIcon}
+          title="В избранном пока пусто"
+          text="Нажимайте «Избранное» на странице видео — и оно появится здесь, в вашей личной коллекции."
+          ctaText="Открыть каталог"
+          ctaTo="/"
+        />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {videos.map(v => <VideoCard key={v.id} video={v} />)}
+        <div className="grid">
+          {videos.map((v, i) => <VideoCard key={v.id} video={v} index={i} />)}
         </div>
       )}
     </main>

@@ -1,67 +1,97 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams, Link } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { getVideos } from '../firebase/db'
 import VideoCard from '../components/VideoCard'
 import CategoryFilter from '../components/CategoryFilter'
+import { CardSkeletonGrid } from '../components/CardSkeleton'
+import EmptyState3D from '../components/visuals/EmptyState3D'
+
+const SearchIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+)
+
+function dateVal(v) {
+  if (v.date?.toMillis) return v.date.toMillis()
+  if (v.date) return new Date(v.date).getTime()
+  return 0
+}
 
 export default function SearchResults() {
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const q = searchParams.get('q') ?? ''
+  const [term, setTerm] = useState(q)
   const [videos, setVideos] = useState([])
   const [loading, setLoading] = useState(true)
   const [category, setCategory] = useState('Все')
+  const [sort, setSort] = useState('relevance')
 
-  useEffect(() => {
-    getVideos().then(v => {
-      setVideos(v)
-      setLoading(false)
-    })
-  }, [])
+  useEffect(() => { setTerm(q) }, [q])
+  useEffect(() => { getVideos().then(v => { setVideos(v); setLoading(false) }) }, [])
 
   const results = useMemo(() => {
-    return videos.filter(v => {
-      const matchSearch = v.title.toLowerCase().includes(q.toLowerCase()) ||
-        v.description?.toLowerCase().includes(q.toLowerCase())
+    const ql = q.toLowerCase()
+    let r = videos.filter(v => {
+      const matchSearch = !ql ||
+        v.title.toLowerCase().includes(ql) ||
+        (v.description || '').toLowerCase().includes(ql)
       const matchCat = category === 'Все' || v.category === category
       return matchSearch && matchCat
     })
-  }, [videos, q, category])
+    if (sort === 'views') r = [...r].sort((a, b) => (b.views || 0) - (a.views || 0))
+    else if (sort === 'newest') r = [...r].sort((a, b) => dateVal(b) - dateVal(a))
+    return r
+  }, [videos, q, category, sort])
+
+  function submit(e) {
+    e.preventDefault()
+    setSearchParams(term.trim() ? { q: term.trim() } : {})
+  }
 
   return (
-    <main className="max-w-7xl mx-auto px-4 py-6">
-      <div className="mb-6">
-        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-1">
-          Результаты поиска: <span className="text-violet-600 dark:text-violet-400">«{q}»</span>
-        </h1>
-        {!loading && <p className="text-sm text-gray-500 dark:text-gray-400">Найдено: {results.length}</p>}
+    <main className="wrap" style={{ paddingBottom: 64 }}>
+      <section className="search-hero glass reveal">
+        <span className="eyebrow">Поиск по платформе</span>
+        <h1 className="search-hero__title">Найди что-то <span className="grad-text">особенное</span></h1>
+        <form className="search-bar" onSubmit={submit}>
+          <div className="search search--big">
+            <svg className="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+            <input type="search" value={term} onChange={e => setTerm(e.target.value)} placeholder="Например: React, музыка, кулинария…" aria-label="Поисковый запрос" />
+          </div>
+          <button type="submit" className="btn btn--primary btn--lg">Искать</button>
+        </form>
+      </section>
+
+      <div className="search-toolbar reveal">
+        <CategoryFilter active={category} onChange={setCategory} />
+        <label className="sort">
+          <span className="sort__label">Сортировка</span>
+          <select value={sort} onChange={e => setSort(e.target.value)} aria-label="Сортировка результатов">
+            <option value="relevance">По релевантности</option>
+            <option value="views">По просмотрам</option>
+            <option value="newest">Сначала новые</option>
+          </select>
+        </label>
       </div>
 
-      <div className="mb-4">
-        <CategoryFilter active={category} onChange={setCategory} />
-      </div>
+      {q && !loading && (
+        <p className="section__sub reveal" style={{ marginBottom: 18 }}>
+          По запросу «{q}» найдено: <span className="phead__count tnum">{results.length}</span>
+        </p>
+      )}
 
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="flex flex-col bg-white dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 animate-pulse">
-              <div className="aspect-video bg-gray-200 dark:bg-gray-700" />
-              <div className="p-3 space-y-2">
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
-                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
-              </div>
-            </div>
-          ))}
-        </div>
+        <CardSkeletonGrid count={8} />
       ) : results.length === 0 ? (
-        <div className="text-center py-24 text-gray-400 dark:text-gray-500">
-          <p className="text-5xl mb-4">🔍</p>
-          <p className="text-lg">Ничего не найдено</p>
-          <p className="text-sm mt-1 mb-4">Попробуйте другой запрос или категорию</p>
-          <Link to="/" className="text-violet-600 dark:text-violet-400 hover:underline text-sm">Вернуться в каталог</Link>
-        </div>
+        <EmptyState3D
+          icon={SearchIcon}
+          title="Ничего не найдено"
+          text={q ? `По запросу «${q}» ничего нет. Попробуйте другой запрос или категорию.` : 'Введите запрос, чтобы начать поиск по каталогу.'}
+          ctaText="Перейти в каталог"
+          ctaTo="/"
+        />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {results.map(v => <VideoCard key={v.id} video={v} />)}
+        <div className="grid">
+          {results.map((v, i) => <VideoCard key={v.id} video={v} index={i} />)}
         </div>
       )}
     </main>

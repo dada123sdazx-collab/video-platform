@@ -1,10 +1,18 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getVideos } from '../firebase/db'
 import { getPopularShorts } from '../firebase/shorts'
 import VideoCard from '../components/VideoCard'
 import CategoryFilter from '../components/CategoryFilter'
 import ShortPreviewCard from '../components/shorts/ShortPreviewCard'
+import Particles from '../components/visuals/Particles'
+import MediaOrb from '../components/visuals/MediaOrb'
+import EmptyState3D from '../components/visuals/EmptyState3D'
+import CountUp from '../components/visuals/CountUp'
+import IridescentButton from '../components/visuals/IridescentButton'
+
+// Тяжёлый 3D-портал грузим лениво (lazy) — не блокирует первый рендер.
+const HeroPortal = lazy(() => import('../components/visuals/HeroPortal'))
 
 function CardSkeleton() {
   return (
@@ -35,14 +43,6 @@ export default function Home() {
     getPopularShorts(10).then(setShorts).catch(() => setShorts([]))
   }, [])
 
-  useEffect(() => {
-    const obs = new IntersectionObserver(entries => {
-      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); obs.unobserve(e.target) } })
-    }, { threshold: 0.08 })
-    document.querySelectorAll('.reveal').forEach(el => obs.observe(el))
-    return () => obs.disconnect()
-  }, [loading])
-
   const filtered = useMemo(() => videos.filter(v => {
     const matchCat = category === 'Все' || v.category === category
     const matchQ = v.title.toLowerCase().includes(search.toLowerCase()) || (v.description||'').toLowerCase().includes(search.toLowerCase())
@@ -50,64 +50,77 @@ export default function Home() {
   }), [videos, search, category])
 
   const featured = videos[0]
+  const totalViews = videos.reduce((a, v) => a + (v.views || 0), 0)
 
   return (
     <div className="shell">
-      {/* HERO */}
-      {!loading && featured && (
-        <section className="hero wrap">
-          <div className="hero__grid">
-            <div className="hero__copy">
-              <span className="eyebrow reveal" style={{'--d':'60ms'}}>Новый формат просмотра</span>
-              <h1 className="hero__title reveal" style={{'--d':'140ms'}}>
-                Смотри видео<br />в <span className="grad">новом формате</span>
-              </h1>
-              <p className="hero__lead reveal" style={{'--d':'240ms'}}>
-                Современная видеоплатформа с удобным каталогом, умным поиском и cinematic-интерфейсом.
-              </p>
-              <div className="hero__cta reveal" style={{'--d':'340ms'}}>
-                <Link to={`/video/${featured.id}`} className="btn btn--primary btn--lg">
+      {/* HERO — cinematic, виден всегда (даже когда каталог пуст) */}
+      <section className="hero wrap">
+        <div className="hero__bg" aria-hidden="true"><i /><i /><i /></div>
+        <Particles count={28} />
+        <div className="hero__grid">
+          <div className="hero__copy">
+            <span className="eyebrow reveal" style={{ '--d': '40ms' }}>Cinematic streaming experience</span>
+            <h1 className="hero__title reveal" style={{ '--d': '120ms' }}>
+              Смотри видео<br />в <span className="grad">новом измерении</span>
+            </h1>
+            <p className="hero__lead reveal" style={{ '--d': '220ms' }}>
+              Премиальная видеоплатформа: глубокий тёмный интерфейс, умный поиск,
+              вертикальные Shorts и плавные cinematic-анимации.
+            </p>
+            <div className="hero__cta reveal" style={{ '--d': '320ms' }}>
+              {featured ? (
+                <IridescentButton to={`/video/${featured.id}`}>
                   <svg viewBox="0 0 24 24"><path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l11.14-6.86a1 1 0 0 0 0-1.7L9.52 4.29A1 1 0 0 0 8 5.14Z" fill="currentColor"/></svg>
-                  Смотреть сейчас
-                </Link>
-                <a href="#catalog" className="btn btn--secondary btn--lg">Открыть каталог</a>
-              </div>
-              <div className="hero__stats reveal" style={{'--d':'440ms'}}>
-                <div className="hero__stat"><div className="n"><span className="accent">{videos.length}+</span></div><div className="l">видео в каталоге</div></div>
-                <div className="hero__stat"><div className="n">5</div><div className="l">категорий</div></div>
-                <div className="hero__stat"><div className="n">4.9★</div><div className="l">средний рейтинг</div></div>
-              </div>
+                  Смотреть видео
+                </IridescentButton>
+              ) : (
+                <IridescentButton href="#catalog">
+                  <svg viewBox="0 0 24 24"><path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l11.14-6.86a1 1 0 0 0 0-1.7L9.52 4.29A1 1 0 0 0 8 5.14Z" fill="currentColor"/></svg>
+                  Смотреть видео
+                </IridescentButton>
+              )}
+              <Link to="/shorts" className="btn btn--secondary btn--lg">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="6" y="3" width="12" height="18" rx="3"/><path d="M11 9l3 2-3 2z" fill="currentColor"/></svg>
+                Открыть Shorts
+              </Link>
             </div>
-
-            <div className="hero__previewwrap reveal" style={{'--d':'300ms'}}>
-              <div className="hero__preview">
-                <div className="hero__float hero__float--tl">
-                  <span className="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
-                  <div><div className="t">{videos.reduce((a,v) => a+(v.views||0), 0).toLocaleString('ru')} просмотров</div><div className="s">всего на платформе</div></div>
-                </div>
-                <div className="poster" style={{ aspectRatio:'16/10.5', borderRadius:0 }}>
-                  <div className="poster__art" style={
-                    featured.thumbnail
-                      ? { backgroundImage:`url(${featured.thumbnail})`, backgroundSize:'cover', backgroundPosition:'center' }
-                      : { background:'linear-gradient(135deg, oklch(0.22 0.04 50), oklch(0.18 0.06 28))' }
-                  } />
-                  <div className="poster__scrim" />
-                  <div className="poster__tag"><span className="badge badge--featured">★ Featured</span></div>
-                  <Link to={`/video/${featured.id}`} className="hero__bigplay" aria-label="Воспроизвести">
-                    <svg viewBox="0 0 24 24"><path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l11.14-6.86a1 1 0 0 0 0-1.7L9.52 4.29A1 1 0 0 0 8 5.14Z" fill="currentColor"/></svg>
-                  </Link>
-                </div>
-                <div className="hero__preview-bar">
-                  <div className="hero__preview-meta">
-                    <div className="t">{featured.title}</div>
-                    <div className="s">{featured.category} · {(featured.views||0).toLocaleString('ru')} просмотров</div>
-                  </div>
-                </div>
-              </div>
+            <div className="hero__stats reveal" style={{ '--d': '420ms' }}>
+              <div className="hero__stat"><div className="n tnum"><CountUp className="accent" value={videos.length} /></div><div className="l">видео в каталоге</div></div>
+              <div className="hero__stat"><div className="n tnum"><CountUp value={shorts.length} /></div><div className="l">Shorts в ленте</div></div>
+              <div className="hero__stat"><div className="n">4K</div><div className="l">cinematic UI</div></div>
             </div>
           </div>
-        </section>
-      )}
+
+          {/* 3D-СЦЕНА: сюда можно подложить свой ассет — <MediaOrb asset="/your-3d.png" /> */}
+          <div className="hero__stage reveal" style={{ '--d': '240ms' }}>
+            <div className="hero__glow" aria-hidden="true" />
+            <Suspense fallback={<MediaOrb size="clamp(260px, 34vw, 440px)" particles={false} />}>
+              <HeroPortal />
+            </Suspense>
+
+            <div className="hero__float hero__float--tl">
+              <span className="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
+              <div><div className="t tnum"><CountUp value={totalViews} /> просмотров</div><div className="s">всего на платформе</div></div>
+            </div>
+
+            <div className="hero__float hero__float--br">
+              {featured ? (
+                <>
+                  <span className="ic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l11.14-6.86a1 1 0 0 0 0-1.7L9.52 4.29A1 1 0 0 0 8 5.14Z"/></svg></span>
+                  <div><div className="t">{featured.title?.slice(0, 22)}</div><div className="s">{featured.category}</div></div>
+                </>
+              ) : (
+                <>
+                  <span className="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 3l1.9 5.8L20 9l-4.6 3.9L17 19l-5-3.4L7 19l1.6-6.1L4 9l6.1-.2z"/></svg></span>
+                  <div><div className="t">Cinematic feed</div><div className="s">purple · cyan · neon</div></div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+        <a href="#catalog" className="hero__scroll" aria-label="Листать к каталогу"><span /></a>
+      </section>
 
       {/* DISCOVER */}
       <section className="wrap section" style={{ paddingBottom:0 }}>
@@ -157,15 +170,20 @@ export default function Home() {
             {Array.from({length:8}).map((_,i) => <CardSkeleton key={i} />)}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="empty">
-            <div className="empty__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg></div>
-            <h3>Ничего не найдено</h3>
-            <p>Попробуй изменить запрос или выбрать другую категорию.</p>
-            <button className="btn btn--secondary" style={{ marginTop:14 }} onClick={() => { setSearch(''); setCategory('Все') }}>Сбросить фильтры</button>
-          </div>
+          <EmptyState3D
+            icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>}
+            title={videos.length === 0 ? 'Каталог пока пуст' : 'Ничего не найдено'}
+            text={videos.length === 0
+              ? 'Здесь появятся видео, как только они будут добавлены. Загрузите первое или откройте Shorts.'
+              : 'Попробуйте изменить запрос или выбрать другую категорию.'}
+            ctaText={videos.length === 0 ? 'Добавить видео' : 'Сбросить фильтры'}
+            {...(videos.length === 0
+              ? { ctaTo: '/author' }
+              : { onCta: () => { setSearch(''); setCategory('Все') } })}
+          />
         ) : (
-          <div className="grid reveal">
-            {filtered.map(v => <VideoCard key={v.id} video={v} />)}
+          <div className="grid">
+            {filtered.map((v, i) => <VideoCard key={v.id} video={v} index={i} />)}
           </div>
         )}
       </section>
@@ -175,7 +193,7 @@ export default function Home() {
         <div className="wrap">
           <div className="footer__grid">
             <div className="footer__brand">
-              <Link to="/" className="brand"><span className="brand__mark"><svg viewBox="0 0 24 24"><path d="M9 6.3v11.4a1 1 0 0 0 1.5.86l9.4-5.7a1 1 0 0 0 0-1.72l-9.4-5.7A1 1 0 0 0 9 6.3Z" fill="#1a1206"/></svg></span><span className="brand__name">VIEW<b>·</b>TUBE</span></Link>
+              <Link to="/" className="brand"><span className="brand__mark"><svg viewBox="0 0 24 24"><path d="M9 6.3v11.4a1 1 0 0 0 1.5.86l9.4-5.7a1 1 0 0 0 0-1.72l-9.4-5.7A1 1 0 0 0 9 6.3Z" fill="#fff"/></svg></span><span className="brand__name">VIEW<b>·</b>TUBE</span></Link>
               <p>Современная видеоплатформа на React. Смотри, ищи и сохраняй лучшее видео.</p>
             </div>
             <div className="footer__col"><h5>Платформа</h5><Link to="/">Главная</Link><a href="#catalog">Каталог</a></div>
