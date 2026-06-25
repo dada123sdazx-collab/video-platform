@@ -5,6 +5,18 @@
 
 **Стек:** React 19 · Vite · Tailwind CSS v4 · Firebase Auth · Cloud Firestore · Firebase Storage · React Router v7 · lucide-react
 
+### 🌐 Живая версия (Firebase Hosting)
+
+| | |
+|---|---|
+| **Сайт** | https://video-b2a2b.web.app |
+| **Зеркало** | https://video-b2a2b.firebaseapp.com |
+| **Лента Shorts** | https://video-b2a2b.web.app/shorts |
+| **Firebase-проект** | `video-b2a2b` |
+
+> Хостинг отдаёт фронтенд; данные — в Cloud Firestore, файлы — в Firebase Storage
+> (того же проекта `video-b2a2b`). Деплой: `npm run build && firebase deploy --only hosting`.
+
 > ⚠️ **Внимание: это демонстрационные данные для учебной презентации.**
 > Не использовать эти данные в production. В реальном проекте пароль
 > администратора нельзя публиковать в README. См. раздел

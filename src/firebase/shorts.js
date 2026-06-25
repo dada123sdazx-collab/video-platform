@@ -241,6 +241,43 @@ export async function createShort({ user, data = {}, videoFile, thumbnailFile, o
   return ref.id
 }
 
+/**
+ * Создаёт Short из обычного видео (авто-публикация при добавлении видео).
+ * Использует тот же videoUrl — в ленте показывается в вертикальном формате.
+ * Подходит только для прямых видеофайлов/ссылок (не YouTube/Vimeo-эмбедов).
+ */
+export async function createShortFromVideo({ user, video = {} }) {
+  if (!user?.uid) throw new Error('Требуется авторизация')
+  if (!video.videoUrl) throw new Error('Нет ссылки на видео')
+  const ref = await addDoc(collection(db, COL), {
+    title: video.title || 'Без названия',
+    description: video.description || '',
+    authorId: user.uid,
+    authorName: user.displayName || user.email || video.authorName || 'Аноним',
+    authorAvatar: user.photoURL || null,
+    videoUrl: video.videoUrl,
+    videoPath: null, // файл общий с обычным видео — не удаляем при удалении short
+    thumbnail: video.thumbnail || null,
+    thumbnailPath: null,
+    duration: 0,
+    category: video.category || 'Без категории',
+    tags: [],
+    hashtags: [],
+    likesCount: 0,
+    commentsCount: 0,
+    viewsCount: 0,
+    sharesCount: 0,
+    savesCount: 0,
+    status: 'published',
+    visibility: 'public',
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    publishedAt: serverTimestamp(),
+    moderation: { isReported: false, reportsCount: 0, lastReportAt: null },
+  })
+  return ref.id
+}
+
 /** Частичное обновление (только разрешённые поля). */
 export async function updateShort(shortId, patch = {}) {
   const allowed = {}

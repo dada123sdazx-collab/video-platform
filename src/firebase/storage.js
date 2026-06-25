@@ -42,6 +42,12 @@ export function uploadShortThumbnail(uid, file, onProgress) {
   return uploadFile(file, `shorts/${uid}/thumbs`, onProgress)
 }
 
+/** Загрузка обычного видео-файла в videos/{uid}/{fileName}. */
+export function uploadVideoFile(uid, file, onProgress) {
+  if (!uid) return Promise.reject(new Error('uid обязателен для загрузки'))
+  return uploadFile(file, `videos/${uid}`, onProgress)
+}
+
 /** Удаление файла по storage-пути (молча игнорирует отсутствие). */
 export async function deleteStoragePath(path) {
   if (!path) return

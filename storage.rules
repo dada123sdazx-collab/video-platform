@@ -38,6 +38,15 @@ service firebase.storage {
       allow delete: if isOwner(uid) || isAdmin();
     }
 
+    // Обычные видео (ручная загрузка файлом): videos/{uid}/{fileName}
+    match /videos/{uid}/{fileName} {
+      allow read: if true;
+      allow write: if isOwner(uid)
+        && request.resource.size < 200 * 1024 * 1024          // ≤ 200 МБ
+        && request.resource.contentType.matches('video/.*');
+      allow delete: if isOwner(uid) || isAdmin();
+    }
+
     // Запрет на запись куда-либо ещё.
     match /{allPaths=**} {
       allow read: if true;

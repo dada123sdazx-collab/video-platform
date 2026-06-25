@@ -1,8 +1,12 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { PlusSquare, CheckCircle, ArrowLeft, Play, Link2, Info } from 'lucide-react'
+import { PlusSquare, CheckCircle, ArrowLeft, Play, Link2, Info, UploadCloud } from 'lucide-react'
 import { addVideo } from '../firebase/db'
+import { createShortFromVideo } from '../firebase/shorts'
+import { uploadVideoFile } from '../firebase/storage'
+import { useToast } from '../context/ToastContext'
 import { useProtectedRoute } from '../hooks/useProtectedRoute'
+import { validateShortVideoFile } from '../utils/validation'
 import { CATEGORIES } from '../components/CategoryFilter'
 
 const NON_ALL = CATEGORIES.filter(c => c !== 'Все')
@@ -11,12 +15,21 @@ function isYouTube(url) {
   return /youtube\.com|youtu\.be/.test(url)
 }
 
+// Прямое видео (можно показать в ленте Shorts через <video>): не эмбед-сервис.
+function isDirectVideo(url) {
+  return !!url && !/youtube\.com|youtu\.be|vimeo\.com|drive\.google\.com/.test(url)
+}
+
 export default function AuthorPanel() {
   const user = useProtectedRoute()
   const navigate = useNavigate()
+  const toast = useToast()
   const [form, setForm] = useState({
     title: '', description: '', category: NON_ALL[0], videoUrl: '', thumbnail: '',
   })
+  const [videoFile, setVideoFile] = useState(null)
+  const [alsoShort, setAlsoShort] = useState(true)
+  const [progress, setProgress] = useState(0)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
@@ -25,20 +38,64 @@ export default function AuthorPanel() {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }))
   }
 
+  function handleFile(e) {
+    const file = e.target.files?.[0] || null
+    setError('')
+    if (!file) { setVideoFile(null); return }
+    const check = validateShortVideoFile(file)
+    if (!check.ok) { setError(check.error); setVideoFile(null); return }
+    setVideoFile(file)
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!form.title.trim() || !form.videoUrl.trim()) {
-      setError('Название и ссылка на видео обязательны')
+    if (!form.title.trim()) { setError('Введите название'); return }
+    if (!videoFile && !form.videoUrl.trim()) {
+      setError('Загрузите файл или укажите ссылку на видео')
       return
     }
     setError('')
     setLoading(true)
+    setProgress(0)
     try {
-      const ref = await addVideo({ ...form, author: user.displayName || user.email })
+      // 1) Источник видео: загруженный файл (Storage) или ссылка.
+      let videoUrl = form.videoUrl.trim()
+      if (videoFile) {
+        const up = await uploadVideoFile(user.uid, videoFile, setProgress)
+        videoUrl = up.url
+      }
+
+      // 2) Обычное видео.
+      const ref = await addVideo({
+        ...form,
+        videoUrl,
+        author: user.displayName || user.email,
+      })
+
+      // 3) Авто-создание Short (для прямых видео — не для YouTube/Vimeo-эмбедов).
+      if (alsoShort) {
+        if (isDirectVideo(videoUrl)) {
+          try {
+            await createShortFromVideo({
+              user,
+              video: { title: form.title, description: form.description, category: form.category, videoUrl, thumbnail: form.thumbnail },
+            })
+            toast.success('Видео опубликовано и добавлено в Shorts')
+          } catch {
+            toast.info('Видео добавлено, но Short создать не удалось')
+          }
+        } else {
+          toast.info('Видео добавлено. Short не создан: для Shorts нужен файл или прямая ссылка на видео')
+        }
+      } else {
+        toast.success('Видео опубликовано')
+      }
+
       setSuccess(true)
-      setTimeout(() => navigate(`/video/${ref.id}`), 1500)
+      setTimeout(() => navigate(`/video/${ref.id}`), 1200)
     } catch {
       setError('Ошибка при добавлении видео')
+      toast.error('Ошибка при добавлении видео')
     } finally {
       setLoading(false)
     }
@@ -119,10 +176,30 @@ export default function AuthorPanel() {
         </div>
 
         <div>
+          <label className="block text-xs font-semibold text-[var(--muted)] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <UploadCloud size={13} /> Или загрузите файл (mp4 / webm / mov)
+          </label>
+          <input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={handleFile} className="vt-input" />
+          {videoFile && (
+            <p className="text-xs text-[var(--muted)] mt-1.5">Выбран: {videoFile.name} ({(videoFile.size / 1024 / 1024).toFixed(1)} МБ)</p>
+          )}
+          <p className="text-xs text-amber-400/80 mt-1.5">⚠ Загрузка файла заработает после включения Firebase Storage в консоли.</p>
+        </div>
+
+        <div>
           <label className="block text-xs font-semibold text-[var(--muted)] uppercase tracking-wider mb-2">Обложка (URL)</label>
           <input name="thumbnail" value={form.thumbnail} onChange={handleChange}
             className="vt-input" placeholder="https://example.com/cover.jpg" />
         </div>
+
+        <label className="flex items-center gap-2.5 text-sm text-[var(--text)] cursor-pointer select-none">
+          <input type="checkbox" checked={alsoShort} onChange={e => setAlsoShort(e.target.checked)} className="w-4 h-4 accent-violet-500" />
+          Также добавить в Shorts (вертикальный формат)
+        </label>
+
+        {loading && progress > 0 && (
+          <div className="progress"><div className="progress__bar" style={{ width: `${progress}%` }} /><span className="progress__label">{progress}%</span></div>
+        )}
 
         <button type="submit" disabled={loading} className="btn-accent w-full justify-center py-2.5 mt-2">
           <PlusSquare size={16} />
