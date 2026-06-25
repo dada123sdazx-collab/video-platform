@@ -461,8 +461,8 @@ h1,h2,h3,h4 { font-family: 'Space Grotesk', sans-serif; font-weight: 600; line-h
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(760px 580px at 77% 20%, oklch(0.635 0.215 293 / 0.20), transparent 68%),
-    radial-gradient(700px 520px at 14% 54%, oklch(0.74 0.150 210 / 0.12), transparent 70%),
+    linear-gradient(115deg, transparent 0 24%, oklch(0.74 0.150 210 / 0.08) 42%, transparent 64%),
+    linear-gradient(26deg, transparent 0 34%, oklch(0.635 0.215 293 / 0.12) 54%, transparent 78%),
     linear-gradient(90deg, transparent 0%, oklch(0.132 0.024 285 / 0.55) 16%, oklch(0.132 0.024 285 / 0.55) 84%, transparent 100%);
 }
 .hero > .particles { z-index: 0; }
@@ -1076,9 +1076,8 @@ h1,h2,h3,h4 { font-family: 'Space Grotesk', sans-serif; font-weight: 600; line-h
   top: -34px;
   bottom: -42px;
   background:
-    radial-gradient(520px 220px at 22% 20%, oklch(0.80 0.125 200 / 0.13), transparent 66%),
-    radial-gradient(520px 260px at 72% 36%, oklch(0.635 0.215 293 / 0.16), transparent 70%),
-    radial-gradient(420px 240px at 48% 100%, oklch(0.62 0.185 258 / 0.11), transparent 68%);
+    linear-gradient(102deg, transparent 0 18%, oklch(0.80 0.125 200 / 0.10) 34%, transparent 52%, oklch(0.635 0.215 293 / 0.12) 70%, transparent 100%),
+    linear-gradient(180deg, transparent 0%, oklch(0.132 0.024 285 / 0.28) 48%, transparent 100%);
   opacity: .8;
   animation: shortsAurora 10s var(--ease) infinite alternate;
 }
