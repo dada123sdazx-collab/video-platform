@@ -1,23 +1,66 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import Particles from './Particles'
 
 const Play = (
   <svg viewBox="0 0 24 24"><path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l11.14-6.86a1 1 0 0 0 0-1.7L9.52 4.29A1 1 0 0 0 8 5.14Z" fill="currentColor"/></svg>
 )
 
-function Card({ mod, label }) {
+const FALLBACK_SHORTS = [
+  { title: 'Shorts: быстрый старт', authorName: 'ViewTube', videoUrl: '/videos/video-1.mp4' },
+  { title: 'Вертикальный момент', authorName: 'ViewTube', videoUrl: '/videos/video-4.mp4' },
+  { title: 'Cinematic short', authorName: 'ViewTube', videoUrl: '/videos/video-7.mp4' },
+]
+
+const FALLBACK_VIDEOS = [
+  { title: 'Борщ по классическому', category: 'Кулинария', videoUrl: '/videos/video-10.mp4' },
+  { title: 'React для начинающих', category: 'Технологии', videoUrl: '/videos/video-2.mp4' },
+  { title: 'Гитарный рифф дня', category: 'Музыка', videoUrl: '/videos/video-4.mp4' },
+]
+
+function pickRandom(items) {
+  return items[Math.floor(Math.random() * items.length)]
+}
+
+function previewStyle(src, fallback = 'linear-gradient(135deg, var(--accent), var(--blue))') {
+  return src ? { backgroundImage: `url(${src})` } : { background: fallback }
+}
+
+function compactTitle(value, fallback) {
+  const text = value || fallback
+  return text.length > 24 ? `${text.slice(0, 23)}…` : text
+}
+
+function Card({ mod, label, item, to, type = 'video' }) {
+  const title = compactTitle(item?.title, label)
+  const image = item?.thumbnail
+  const video = !image ? item?.videoUrl : ''
+  const meta = type === 'short'
+    ? (item?.authorName ? `@${item.authorName}` : 'Shorts')
+    : (item?.category || 'Видео')
+  const Shell = to ? Link : 'div'
+  const props = to
+    ? { to, 'aria-label': type === 'short' ? `Открыть Shorts: ${title}` : `Смотреть видео: ${title}` }
+    : { 'aria-hidden': 'true' }
+
   return (
-    <div className={`portal__card portal__card--${mod}`}>
+    <Shell className={`portal__card portal__card--${mod}${to ? ' portal__card--link' : ''}`} {...props}>
       <div className="portal__card-inner">
-        <div className="portal__card-thumb">
+        <div
+          className={`portal__card-thumb${image || video ? ' portal__card-thumb--media' : ''}`}
+          style={previewStyle(image)}
+        >
+          {video && <video src={video} muted loop playsInline autoPlay />}
+          <span className="portal__card-scrim" />
           <span className="portal__card-play">{Play}</span>
         </div>
         <div className="portal__card-meta">
-          <span className="portal__card-tag">{label}</span>
+          <span className="portal__card-tag" title={item?.title || label}>{title}</span>
+          <span className="portal__card-sub">{meta}</span>
           <i /><i />
         </div>
       </div>
-    </div>
+    </Shell>
   )
 }
 
@@ -29,10 +72,14 @@ function Card({ mod, label }) {
  * - scroll-zoom: при прокрутке сцена приближается и плавно растворяется,
  *   создавая ощущение «погружения»;
  * - пауза анимаций вне вьюпорта (IntersectionObserver) ради производительности.
- * Декоративен (aria-hidden), pointer-events:none.
+ * Карточки превью кликабельны, остальные части сцены декоративны.
  */
-export default function HeroPortal() {
+export default function HeroPortal({ short = null, video = null }) {
   const rootRef = useRef(null)
+  const fallbackShort = useMemo(() => pickRandom(FALLBACK_SHORTS), [])
+  const fallbackVideo = useMemo(() => pickRandom(FALLBACK_VIDEOS), [])
+  const previewShort = short || fallbackShort
+  const previewVideo = video || fallbackVideo
 
   useEffect(() => {
     const root = rootRef.current
@@ -93,7 +140,7 @@ export default function HeroPortal() {
   }, [])
 
   return (
-    <div className="portal" ref={rootRef} aria-hidden="true">
+    <div className="portal" ref={rootRef} aria-label="Интерактивные превью видео и Shorts">
       <div className="portal__scene">
         <div className="portal__halo" />
         <div className="portal__ring portal__ring--1" />
@@ -107,8 +154,8 @@ export default function HeroPortal() {
         </div>
 
         <Card mod="a" label="Trending" />
-        <Card mod="b" label="Shorts" />
-        <Card mod="c" label="4K" />
+        <Card mod="b" label="Shorts" item={previewShort} to={short?.id ? `/shorts/${short.id}` : '/shorts'} type="short" />
+        <Card mod="c" label="4K" item={previewVideo} to={video?.id ? `/video/${video.id}` : '/#catalog'} type="video" />
 
         <div className="portal__frag portal__frag--1"><span /><span /><span /></div>
         <div className="portal__frag portal__frag--2"><span /><span /></div>

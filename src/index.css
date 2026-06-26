@@ -580,21 +580,45 @@ h1,h2,h3,h4 { font-family: 'Space Grotesk', sans-serif; font-weight: 600; line-h
   transform: translate3d(calc(var(--px) * var(--kx, 26px)), calc(var(--py) * var(--ky, 26px)), var(--z, 60px));
   transition: transform .3s var(--ease);
 }
+.portal__card--link {
+  color: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+  text-decoration: none;
+  z-index: 4;
+}
 .portal__card-inner {
   border-radius: 14px; padding: 8px; border: 1px solid var(--line-2);
   background: oklch(0.176 0.028 284 / 0.66); backdrop-filter: blur(10px);
   box-shadow: var(--shadow-pop); animation: cardFloat var(--fd, 7s) ease-in-out infinite;
+  transition: border-color .2s, box-shadow .2s, transform .2s var(--ease);
 }
-.portal__card-thumb { position: relative; aspect-ratio: 16/10; border-radius: 9px; overflow: hidden; background: linear-gradient(135deg, var(--accent), var(--blue)); }
+.portal__card--link:hover .portal__card-inner,
+.portal__card--link:focus-visible .portal__card-inner {
+  border-color: var(--accent-line);
+  box-shadow: var(--shadow-pop), 0 0 28px -12px var(--accent);
+}
+.portal__card--link:focus-visible { outline: none; }
+.portal__card--link:hover .portal__card-play,
+.portal__card--link:focus-visible .portal__card-play { transform: scale(1.08); }
+.portal__card-thumb {
+  position: relative; aspect-ratio: 16/10; border-radius: 9px; overflow: hidden;
+  background: linear-gradient(135deg, var(--accent), var(--blue));
+  background-position: center; background-size: cover;
+}
 .portal__card--b .portal__card-thumb { background: linear-gradient(135deg, var(--cyan), var(--blue)); aspect-ratio: 9/12; }
 .portal__card--c .portal__card-thumb { background: linear-gradient(135deg, var(--blue), var(--accent)); }
-.portal__card-play { position: absolute; inset: 0; margin: auto; width: 26px; height: 26px; border-radius: 99px; display: grid; place-items: center; background: rgba(10,10,14,.42); border: 1px solid rgba(255,255,255,.5); color: #fff; }
+.portal__card-thumb--media { background-color: oklch(0.18 0.055 264); }
+.portal__card-thumb video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.portal__card-scrim { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(4,4,7,0) 42%, rgba(4,4,7,.55) 100%); z-index: 1; }
+.portal__card-play { position: absolute; inset: 0; margin: auto; width: 26px; height: 26px; border-radius: 99px; display: grid; place-items: center; background: rgba(10,10,14,.42); border: 1px solid rgba(255,255,255,.5); color: #fff; z-index: 2; transition: transform .2s var(--ease); }
 .portal__card-play svg { width: 11px; height: 11px; margin-left: 1px; }
-.portal__card-meta { display: flex; align-items: center; gap: 5px; padding: 7px 2px 1px; }
-.portal__card-tag { font-family: 'Space Grotesk'; font-weight: 600; font-size: 10px; color: var(--text); }
+.portal__card-meta { display: grid; grid-template-columns: minmax(0, auto) 1fr 14px; align-items: center; gap: 5px; padding: 7px 2px 1px; min-width: 0; }
+.portal__card-tag { grid-column: 1 / -1; font-family: 'Space Grotesk'; font-weight: 600; font-size: 10px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.portal__card-sub { color: var(--faint); font-size: 9px; line-height: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .portal__card-meta i { height: 4px; border-radius: 9px; background: var(--line-3); }
-.portal__card-meta i:nth-child(2) { flex: 1; }
-.portal__card-meta i:nth-child(3) { width: 14px; }
+.portal__card-meta i:nth-of-type(1) { width: 100%; }
+.portal__card-meta i:nth-of-type(2) { width: 14px; }
 .portal__card--a { top: 6%; left: 60%; --kx: 34px; --ky: 30px; --z: 90px; --fd: 6.5s; }
 .portal__card--b { top: 52%; left: -6%; --kx: 40px; --ky: 26px; --z: 120px; --fd: 7.5s; }
 .portal__card--c { top: 74%; left: 66%; --kx: 28px; --ky: 34px; --z: 70px; --fd: 8.2s; }
@@ -660,8 +684,41 @@ h1,h2,h3,h4 { font-family: 'Space Grotesk', sans-serif; font-weight: 600; line-h
   padding: 12px 15px; display: flex; align-items: center; gap: 11px;
   box-shadow: var(--shadow-pop);
 }
+.hero__float--link {
+  color: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.hero__float--link:hover,
+.hero__float--link:focus-visible {
+  border-color: var(--accent-line);
+  box-shadow: var(--shadow-pop), 0 0 36px -16px var(--accent);
+  outline: none;
+}
 .hero__float .ic { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); flex: none; }
 .hero__float .ic svg { width: 18px; height: 18px; }
+.hero__float-thumb {
+  width: 54px; height: 38px; border-radius: 11px; display: grid; place-items: center; flex: none;
+  background: linear-gradient(135deg, var(--blue), var(--accent));
+  background-position: center; background-size: cover;
+  border: 1px solid rgba(255,255,255,.16);
+  color: #fff; overflow: hidden; position: relative;
+}
+.hero__float-thumb::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(5,5,8,0), rgba(5,5,8,.38));
+  z-index: 1;
+}
+.hero__float-thumb video {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+.hero__float-thumb svg {
+  position: relative; z-index: 2; width: 18px; height: 18px;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,.5));
+}
 .hero__float .t { font-family:'Space Grotesk'; font-weight: 600; font-size: 14px; }
 .hero__float .s { color: var(--faint); font-size: 12px; }
 .hero__float--tl { top: -18px; left: -18px; animation: floaty 5s ease-in-out infinite; }

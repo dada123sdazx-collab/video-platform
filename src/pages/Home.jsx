@@ -14,6 +14,17 @@ import IridescentButton from '../components/visuals/IridescentButton'
 // Тяжёлый 3D-портал грузим лениво (lazy) — не блокирует первый рендер.
 const HeroPortal = lazy(() => import('../components/visuals/HeroPortal'))
 
+const FALLBACK_HERO_VIDEOS = [
+  { title: 'Борщ по классическому', category: 'Кулинария', videoUrl: '/videos/video-10.mp4' },
+  { title: 'React для начинающих', category: 'Технологии', videoUrl: '/videos/video-2.mp4' },
+  { title: 'Гитарный рифф дня', category: 'Музыка', videoUrl: '/videos/video-4.mp4' },
+]
+
+function pickRandom(items) {
+  if (!items.length) return null
+  return items[Math.floor(Math.random() * items.length)]
+}
+
 function CardSkeleton() {
   return (
     <div className="card skeleton">
@@ -49,7 +60,11 @@ export default function Home() {
     return matchCat && matchQ
   }), [videos, search, category])
 
-  const featured = videos[0]
+  const featured = useMemo(() => pickRandom(videos), [videos])
+  const heroShort = useMemo(() => pickRandom(shorts), [shorts])
+  const fallbackHeroVideo = useMemo(() => pickRandom(FALLBACK_HERO_VIDEOS), [])
+  const heroVideo = featured || fallbackHeroVideo
+  const heroVideoTo = featured ? `/video/${featured.id}` : '/#catalog'
   const totalViews = videos.reduce((a, v) => a + (v.views || 0), 0)
 
   return (
@@ -96,7 +111,7 @@ export default function Home() {
           <div className="hero__stage reveal" style={{ '--d': '240ms' }}>
             <div className="hero__glow" aria-hidden="true" />
             <Suspense fallback={<MediaOrb size="clamp(260px, 34vw, 440px)" particles={false} />}>
-              <HeroPortal />
+              <HeroPortal short={heroShort} video={heroVideo} />
             </Suspense>
 
             <div className="hero__float hero__float--tl">
@@ -104,11 +119,19 @@ export default function Home() {
               <div><div className="t tnum"><CountUp value={totalViews} /> просмотров</div><div className="s">всего на платформе</div></div>
             </div>
 
-            <div className="hero__float hero__float--br">
-              {featured ? (
+            <Link to={heroVideoTo} className="hero__float hero__float--br hero__float--link">
+              {heroVideo ? (
                 <>
-                  <span className="ic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l11.14-6.86a1 1 0 0 0 0-1.7L9.52 4.29A1 1 0 0 0 8 5.14Z"/></svg></span>
-                  <div><div className="t">{featured.title?.slice(0, 22)}</div><div className="s">{featured.category}</div></div>
+                  <span
+                    className="hero__float-thumb"
+                    style={heroVideo.thumbnail ? { backgroundImage: `url(${heroVideo.thumbnail})` } : undefined}
+                  >
+                    {!heroVideo.thumbnail && heroVideo.videoUrl && (
+                      <video src={heroVideo.videoUrl} muted loop playsInline autoPlay />
+                    )}
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l11.14-6.86a1 1 0 0 0 0-1.7L9.52 4.29A1 1 0 0 0 8 5.14Z"/></svg>
+                  </span>
+                  <div><div className="t">{heroVideo.title?.slice(0, 22)}</div><div className="s">{heroVideo.category}</div></div>
                 </>
               ) : (
                 <>
@@ -116,7 +139,7 @@ export default function Home() {
                   <div><div className="t">Cinematic feed</div><div className="s">purple · cyan · neon</div></div>
                 </>
               )}
-            </div>
+            </Link>
           </div>
         </div>
         <a href="#catalog" className="hero__scroll" aria-label="Листать к каталогу"><span /></a>
