@@ -69,9 +69,17 @@ export default function Home() {
 
   return (
     <div className="shell">
+      <div className="home-effects" aria-hidden="true">
+        <span className="home-effects__beam home-effects__beam--a" />
+        <span className="home-effects__beam home-effects__beam--b" />
+        <span className="home-effects__wave home-effects__wave--a" />
+        <span className="home-effects__wave home-effects__wave--b" />
+      </div>
+
       {/* HERO — cinematic, виден всегда (даже когда каталог пуст) */}
       <section className="hero wrap">
         <div className="hero__bg" aria-hidden="true"><i /><i /><i /></div>
+        <div className="hero__ribbons" aria-hidden="true"><span /><span /><span /></div>
         <Particles count={28} />
         <div className="hero__grid">
           <div className="hero__copy">
@@ -166,15 +174,15 @@ export default function Home() {
       {/* POPULAR SHORTS */}
       {shorts.length > 0 && (
         <section className="wrap section section--shorts" style={{ paddingBottom: 0 }}>
-          <div className="section__head">
+          <div className="section__head reveal">
             <div>
               <h2 className="section__title">Популярные <span className="accent">Shorts</span></h2>
               <p className="section__sub">Короткие вертикальные видео</p>
             </div>
             <Link to="/shorts" className="section__more">Смотреть ленту →</Link>
           </div>
-          <div className="scroller shorts-rail">
-            {shorts.map(s => <ShortPreviewCard key={s.id} short={s} />)}
+          <div className="scroller shorts-rail reveal" style={{ '--d': '120ms' }}>
+            {shorts.map((s, i) => <ShortPreviewCard key={s.id} short={s} index={i} />)}
           </div>
         </section>
       )}

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { formatCount, initialOf } from '../../utils/formatters'
 
 /** Вертикальная карточка-превью short для списков (главная, профиль). */
-export default function ShortPreviewCard({ short, showStatus = false }) {
+export default function ShortPreviewCard({ short, showStatus = false, index = 0 }) {
   const posterStyle = short.thumbnail
     ? { backgroundImage: `url(${short.thumbnail})` }
     : { background: 'linear-gradient(160deg, oklch(0.28 0.09 293), oklch(0.18 0.07 240))' }
@@ -15,7 +15,7 @@ export default function ShortPreviewCard({ short, showStatus = false }) {
   }[short.status] || short.status
 
   return (
-    <Link to={`/shorts/${short.id}`} className="spreview">
+    <Link to={`/shorts/${short.id}`} className="spreview" style={{ '--d': `${Math.min(index, 9) * 55}ms` }}>
       <div className="spreview__poster" style={posterStyle}>
         <div className="spreview__scrim" />
         <span className="spreview__play" aria-hidden="true">
